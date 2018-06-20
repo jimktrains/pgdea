@@ -1,0 +1,2 @@
+# pgdea
+Double Entry Accounting
