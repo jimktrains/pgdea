@@ -43,14 +43,17 @@ as $$
 declare
   unbalanced_entries text;
 begin
-  select string_agg(entry_id::text, ', ') into unbalanced_entries
-    from (select entry_id
+  select string_agg(description, '", "') into unbalanced_entries
+    from (
+      select min(description) as description
       from new_postings
-      group by entry_id
+      join journal
+        on journal.entry_id = new_postings.entry_id
+      group by journal.entry_id
       having sum(amount) <> 0
     ) x;
   if unbalanced_entries is not null then
-   raise exception 'Journal Entries % Not Balanced', unbalanced_entries;
+   raise exception 'Journal Entries "%" Not Balanced', unbalanced_entries;
   end if;
 
   return new;
@@ -95,7 +98,7 @@ begin
       where new_account.balance < 0 and old_account.balance >= 0
     ) x;
   if overdrawn_account is not null then
-   raise notice 'Overdrawn Accounts:%', overdrawn_account;
+   raise notice 'Overdrawn Accounts: %', overdrawn_account;
   end if;
 
   return new;
