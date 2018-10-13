@@ -1,80 +1,64 @@
 # pgdea
 Double Entry Accounting using PostgreSQL 10 triggers and transition tables.
 
-Set up the database.
+This version should have gapless sequences.
 
-    % sudo -u postgres dropdb pgdea;
-    dropdb: database removal failed: ERROR:  database "pgdea" does not exist
-    % sudo -u postgres createdb pgdea;
-    % cat schema.sql | sudo -u postgres psql pgdea
+Notices are raised on overdrawn accounts.
+
+No guarentee is given to preformance.
+
+Use `make` to install to a test db and run the test
+
+    CREATE TABLE
+    CREATE FUNCTION
     CREATE TABLE
     CREATE TABLE
     CREATE TABLE
     CREATE FUNCTION
     CREATE TRIGGER
-
-Look at the schema (not shown) and test definition.
-
-    % cat test.sql
-    insert into account (name) values ('jim'), ('anne');
-    select * from account;
-
-    begin;
-    insert into journal (description) values ('test tx');
-    select * from journal;
-
-    -- this fails as it's not balanced
-    insert into posting (entry_id, account_id, amount) values (1, 1, 10), (1, 2, 10);
-    commit;
-
-    begin;
-    insert into journal (description) values ('test tx');
-    select * from journal;
-    -- this works as it is balanced
-    insert into posting (entry_id, account_id, amount) values (2, 1, 10), (2, 2, -10);
-    select * from posting;
-    commit;
-
-    begin;
-    insert into posting (entry_id, account_id, amount) values (2, 1, 10), (2, 2, -10);
-    commit;
-
-Run the test.
-
-    % cat test.sql| sudo -u postgres psql pgdea
-     account_id | name
-    ------------+------
-              1 | jim
-              2 | anne
+    CREATE TYPE
+    CREATE FUNCTION
+    CREATE FUNCTION
+    CREATE TRIGGER
+    CREATE FUNCTION
+    CREATE TRIGGER
+    cat test.sql | psql pgdea_test
+    INSERT 0 2
+     account_id | name | balance 
+    ------------+------+---------
+              1 | jim  |       0
+              2 | anne |       0
     (2 rows)
 
-    BEGIN
-    INSERT 0 1
-     entry_id | description |         created_at
-    ----------+-------------+----------------------------
-            1 | test tx     | 2018-06-19 22:42:01.230601
-    (1 row)
-
+    This fails as it is not balanced
     ERROR:  Journal Entries 1 Not Balanced
     CONTEXT:  PL/pgSQL function function_check_zero_balance_journal_entry() line 12 at RAISE
-    ROLLBACK
-    BEGIN
-    INSERT 0 1
-     entry_id | description |         created_at
-    ----------+-------------+----------------------------
-            2 | test tx     | 2018-06-19 22:42:01.234067
-    (1 row)
+    PL/pgSQL function insert_postings(text,posting_primative[]) line 3 at RETURN QUERY
 
-    INSERT 0 2
-     posting_id | entry_id | account_id | amount
+
+    Inserting
+    NOTICE:  Overdrawn Accounts:2
+     posting_id | entry_id | account_id | amount 
     ------------+----------+------------+--------
-              3 |        2 |          1 |     10
-              4 |        2 |          2 |    -10
+              1 |        1 |          1 |     10
+              2 |        1 |          2 |    -10
     (2 rows)
 
-    COMMIT
-    BEGIN
-    ERROR:  Journal Entries 2 Not Created In This Transaction
-    CONTEXT:  PL/pgSQL function function_check_journal_in_this_tx() line 13 at RAISE
-    ROLLBACK
+    After Insert
+     entry_id | description  |         created_at         
+    ----------+--------------+----------------------------
+            1 | passing test | 2018-10-12 22:02:17.233009
+    (1 row)
+
+     posting_id | entry_id | account_id | amount 
+    ------------+----------+------------+--------
+              1 |        1 |          1 |     10
+              2 |        1 |          2 |    -10
+    (2 rows)
+
+     account_id | name | balance 
+    ------------+------+---------
+              1 | jim  |      10
+              2 | anne |     -10
+    (2 rows)
 

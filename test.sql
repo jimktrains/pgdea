@@ -1,22 +1,17 @@
-insert into account (name) values ('jim'), ('anne');
+insert into account (account_id, name, balance)
+values
+  (1, 'jim', 0), 
+  (2, 'anne', 0);
 select * from account;
 
-begin;
-insert into journal (description) values ('test tx');
-select * from journal;
+\echo This fails as it is not balanced
+select * from insert_postings('failing test'::text, array[row(1, 10), row(2, -20)]::posting_primative[]);
 
--- this fails as it's not balanced
-insert into posting (entry_id, account_id, amount) values (1, 1, 10), (1, 2, 10);
-commit;
+\echo Inserting
+select * from insert_postings('passing test'::text, array[row(1, 10), row(2, -10)]::posting_primative[]);
 
-begin;
-insert into journal (description) values ('test tx');
+\echo After Insert
 select * from journal;
--- this works as it is balanced
-insert into posting (entry_id, account_id, amount) values (2, 1, 10), (2, 2, -10);
 select * from posting;
-commit;
+select * from account;
 
-begin;
-insert into posting (entry_id, account_id, amount) values (2, 1, 10), (2, 2, -10);
-commit;
