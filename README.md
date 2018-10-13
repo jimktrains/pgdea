@@ -16,15 +16,16 @@ Insert accounts
     insert into account (account_id, name, balance)
     values
       (1, 'Olive Oyl', 0),
-      (2, 'J. Wellington Wimpy', 0)
+      (2, 'J. Wellington Wimpy', 0),
+      (3, 'Popeye', 0)
     returning *;
 
      account_id |        name         | balance
     ------------+---------------------+---------
               1 | Olive Oyl           |       0
               2 | J. Wellington Wimpy |       0
-    (2 rows)
-
+              3 | Popeye              |       0
+    (3 rows)
 
 Insert an unbalanced posting. Note that this fails and gives the list of descriptions that failed.
 
@@ -47,27 +48,43 @@ Insert a balanced posting. Note the notice on the overdrawn account, but lets th
               2 |        1 |          2 |     10
     (2 rows)
 
- Let's just look at everything.
+Insert a 3-way transaction. Notice that there is no overdrawn notice because Olive was already overdrawn.
+
+     posting_id | entry_id | account_id | amount
+    ------------+----------+------------+--------
+              3 |        2 |          1 |      5
+              4 |        2 |          2 |    -10
+              5 |        2 |          3 |      5
+    (3 rows)
+
+Let's just look at everything.
 
     select * from journal;
 
-     entry_id | description  |         created_at         
-    ----------+--------------+----------------------------
-            1 | passing test | 2018-10-12 22:02:17.233009
-    (1 row)
+     entry_id |     description     |         created_at
+    ----------+---------------------+----------------------------
+            1 | passing test        | 2018-10-12 22:34:22.28705
+            2 | passing triple test | 2018-10-12 22:34:22.289285
+    (2 rows)
+
 
     select * from posting;
 
-     posting_id | entry_id | account_id | amount 
+     posting_id | entry_id | account_id | amount
     ------------+----------+------------+--------
               1 |        1 |          1 |    -10
               2 |        1 |          2 |     10
-    (2 rows)
+              3 |        2 |          1 |      5
+              4 |        2 |          2 |    -10
+              5 |        2 |          3 |      5
+    (5 rows)
 
     select * from account;
 
      account_id |        name         | balance
     ------------+---------------------+---------
-              1 | Olive Oyl           |     -10
-              2 | J. Wellington Wimpy |      10
-    (2 rows)
+              1 | Olive Oyl           |      -5
+              2 | J. Wellington Wimpy |       0
+              3 | Popeye              |       5
+    (3 rows)
+

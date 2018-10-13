@@ -11,7 +11,7 @@ declare
 begin
   insert into serialvalues (table_name, counter)
   values (tname, 1)
-  on conflict (table_name) do update set counter = EXCLUDED.counter + 1
+  on conflict (table_name) do update set counter = serialvalues.counter + 1
   returning counter into c;
 
   return c;
