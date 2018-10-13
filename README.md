@@ -15,8 +15,8 @@ Insert accounts
 
     insert into account (account_id, name, balance)
     values
-      (1, 'jim', 0), 
-      (2, 'anne', 0)
+      (1, 'Olive Oyl', 0),
+      (2, 'J. Wellington Wimpy', 0)
     returning *;
 
      account_id |        name         | balance
